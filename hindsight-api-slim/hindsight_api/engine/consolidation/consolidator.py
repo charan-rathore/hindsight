@@ -3668,6 +3668,7 @@ async def _apply_create_observation(
         logger.debug(f"Create skipped: all {len(source_memory_ids)} source memories were deleted concurrently")
         return {"action": "skipped", "reason": "sources_deleted"}
     source_memory_ids = live_source_memory_ids
+    proof_count = len(set(source_memory_ids))
 
     t0 = time.time()
     if not store.store_owned_for(bank_id):
@@ -3682,7 +3683,7 @@ async def _apply_create_observation(
                     id, bank_id, text, fact_type, embedding, proof_count, source_memory_ids,
                     tags, event_date, occurred_start, occurred_end, mentioned_at, search_vector
                 )
-                VALUES ($1, $2, $3, 'observation', $4::vector, 1, $5, $6, $7, $8, $9, $10,
+                VALUES ($1, $2, $3, 'observation', $4::vector, $11, $5, $6, $7, $8, $9, $10,
                         tokenize($3, 'llmlingua2')::bm25_catalog.bm25vector)
                 RETURNING id
             """
@@ -3697,7 +3698,7 @@ async def _apply_create_observation(
                     id, bank_id, text, fact_type, embedding, proof_count, source_memory_ids,
                     tags, event_date, occurred_start, occurred_end, mentioned_at, search_vector
                 )
-                VALUES ($1, $2, $3, 'observation', $4::vector, 1, $5, $6, $7, $8, $9, $10,
+                VALUES ($1, $2, $3, 'observation', $4::vector, $11, $5, $6, $7, $8, $9, $10,
                         to_tsvector('{config.text_search_extension_native_language}'::regconfig, COALESCE($3, '')))
                 RETURNING id
             """
@@ -3707,7 +3708,7 @@ async def _apply_create_observation(
                     id, bank_id, text, fact_type, embedding, proof_count, source_memory_ids,
                     tags, event_date, occurred_start, occurred_end, mentioned_at
                 )
-                VALUES ($1, $2, $3, 'observation', $4::vector, 1, $5, $6, $7, $8, $9, $10)
+                VALUES ($1, $2, $3, 'observation', $4::vector, $11, $5, $6, $7, $8, $9, $10)
                 RETURNING id
             """
 
@@ -3723,6 +3724,7 @@ async def _apply_create_observation(
             obs_occurred_start,
             obs_occurred_end,
             obs_mentioned_at,
+            proof_count,
         )
         created_id = row["id"]
 
@@ -3746,7 +3748,7 @@ async def _apply_create_observation(
                 embedding=embedding_str,
                 fact_type="observation",
                 tags=list(obs_tags),
-                proof_count=1,
+                proof_count=proof_count,
                 source_memory_ids=[str(s) for s in source_memory_ids],
                 event_date=obs_event_date,
                 occurred_start=obs_occurred_start,
