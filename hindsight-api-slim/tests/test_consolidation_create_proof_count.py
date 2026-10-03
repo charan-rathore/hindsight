@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from hindsight_api.engine.consolidation import consolidator as C
-from hindsight_api.engine.memories.pg import consolidation as pg_consolidation
 from hindsight_api.engine.memories.base import MemoriesExtension
+from hindsight_api.engine.memories.pg import consolidation as pg_consolidation
 
 
 def _ids():
@@ -31,7 +31,7 @@ async def test_consolidator_hands_the_store_only_surviving_sources(source_case):
     conn.fetch = AsyncMock(return_value=[{"id": mid} for mid in {first, second}])
     store = MagicMock()
     store.insert_observation = AsyncMock(return_value=uuid.uuid4())
-    store.lock_live_memory_ids = AsyncMock(side_effect=lambda **kw: {str(u) for u in kw['unit_ids'] if u != deleted})
+    store.lock_live_memory_ids = AsyncMock(side_effect=lambda **kw: {str(u) for u in kw["unit_ids"] if u != deleted})
     engine = SimpleNamespace(_backend=SimpleNamespace(ops=SimpleNamespace(uses_observation_sources_table=False)))
 
     with patch.object(C, "get_memories", return_value=store):
